@@ -83,7 +83,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 import Modal from './Modal.vue';
-import { Chat } from '../types';
+import type { Chat } from '../types/index';
 
 const props = defineProps<{
     isActive: boolean;

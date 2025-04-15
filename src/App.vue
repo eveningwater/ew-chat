@@ -51,7 +51,7 @@ import ChatWindow from './components/ChatWindow.vue';
 import Modal from './components/Modal.vue';
 
 // 导入类型和配置
-import { Chat, Message, Theme, Language, Translations, AppState } from './types';
+import type { Chat, Message, Language, Translations, AppState } from './types/index';
 import { API_KEY, MODEL } from './config';
 
 // 创建响应式存储
@@ -138,25 +138,10 @@ const translations: Translations = {
         newChatTitle: "新的聊天标题",
         cancel: "取消",
         confirm: "确认",
-        renameText: "重命名",
         language: "中文",
     },
 };
 
-// 辅助函数：获取稳定的Markdown渲染
-function getStableRendering(text: string): string {
-    // 按三个反引号分割文本
-    const parts = text.split('```');
-    if (parts.length % 2 === 1) {
-        // 所有代码块都已关闭
-        return marked.parse(text);
-    } else {
-        // 代码块未关闭；通过人为关闭它来强制渲染为代码块
-        const closedPart = parts.slice(0, parts.length - 1).join('```');
-        const openPart = parts[parts.length - 1];
-        return marked.parse(closedPart) + marked.parse('```' + openPart + '\n```');
-    }
-}
 
 // 创建新聊天
 function createNewChat() {
@@ -541,7 +526,6 @@ function saveToStore() {
 
 // 初始化
 onMounted(() => {
-    // 配置marked和highlight.js
     marked.setOptions({
         highlight: function (code: string, lang: string) {
             if (lang && hljs.getLanguage(lang)) {
