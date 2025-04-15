@@ -1,39 +1,44 @@
-name: Deploy ew-chat to GitHub Pages
+name: Deploy ew-chat
 
 on:
   push:
     branches:
-      - main # 你可以根据需要修改为自己的主分支名称（比如 master）
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the code
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18" # 使用你项目中使用的 Node.js 版本
+          node-version: "18"
 
-      # Install dependencies
-      - name: Install pnpm
+      - name: Install dependencies
         run: npm install pnpm -g
 
       - name: Install dependencies
         run: pnpm install
 
-      # Build the project
-      - name: Build the project
-        run: pnpm run build
+      - name: Set up Git config
+        run: |
+          git config --global user.email "854806732@qq.com"
+          git config --global user.name "eveningwater"
+      - name: Configure Git to use token
+        run: git remote set-url origin https://eveningwater:${{ secrets.EW_CHAT_GH_TOKEN }}@github.com/eveningwater/ew-chat.git
 
-      # Deploy to GitHub Pages
+      - name: Build the project
+        run: pnpm run docs:build
+
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub 会自动提供这个 token
-          publish_dir: ./dist # Vite 默认的构建输出目录
+        run: pnpm run release
+        env:
+          GH_TOKEN: ${{ secrets.EW_CHAT_GH_TOKEN }}
