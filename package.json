@@ -1,0 +1,24 @@
+{
+  "name": "ew-chat",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "ew-message": "^0.1.8",
+    "ew-responsive-store": "^0.0.2",
+    "highlight.js": "^11.7.0",
+    "marked": "^4.2.12",
+    "uuid": "^9.0.0",
+    "vue": "^3.5.13"
+  }
+}
