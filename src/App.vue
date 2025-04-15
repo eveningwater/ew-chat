@@ -24,11 +24,11 @@
                 <h3>{{ modalTitle }}</h3>
             </template>
             <template #body>
-                <div v-html="modalContent"></div>
+                <div>{{ modalContent }}</div>
             </template>
             <template #footer>
                 <button class="modal-button cancel" @click="showModal = false">{{ translations[currentLanguage].cancel
-                }}</button>
+                    }}</button>
                 <button class="modal-button confirm" @click="handleModalConfirm">{{
                     translations[currentLanguage].confirm }}</button>
             </template>
@@ -109,10 +109,15 @@ const translations: Translations = {
         typePlaceholder: "Type your message here...",
         disclaimer: "ewChat may produce inaccurate information. Messages are stored locally.",
         chatHistory: "Chat History",
+        confirmClearAllHistory: "Are you sure you want to clear all history?",
         uploadedFile: "Uploaded file: ",
         deleteText: "Delete",
         renameText: "Rename",
+        confirmDelete: "Are you sure you want to delete this chat?",
         language: "English",
+        cancel: "Cancel",
+        confirm: "Sure",
+        newChatTitle: "New Chat Title",
     },
     zh: {
         newChat: "新对话",
@@ -135,6 +140,7 @@ const translations: Translations = {
         deleteText: "删除",
         renameText: "重命名",
         confirmDelete: "确定要删除这个聊天吗？",
+        confirmClearAllHistory: "确定要清除历史吗？",
         newChatTitle: "新的聊天标题",
         cancel: "取消",
         confirm: "确认",
@@ -395,7 +401,7 @@ function clearAllHistory() {
 
     showModal.value = true;
     modalTitle.value = translations[currentLanguage.value].clearHistory;
-    modalContent.value = translations[currentLanguage.value].confirmDelete;
+    modalContent.value = translations[currentLanguage.value].confirmClearAllHistory;
     modalConfirmAction.value = () => {
         chats.value = {};
         currentChatId.value = null;
