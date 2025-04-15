@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "gh-pages -d dist"
   },
   "dependencies": {
     "@types/marked": "^4.3.2",
     "@types/uuid": "^10.0.0",
     "ew-message": "^0.1.8",
     "ew-responsive-store": "^0.0.2",
+    "gh-pages": "^6.3.0",
     "highlight.js": "^11.11.1",
     "marked": "^4.3.0",
     "uuid": "^11.1.0",

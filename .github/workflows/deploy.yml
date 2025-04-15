@@ -36,7 +36,7 @@ jobs:
         run: git remote set-url origin https://eveningwater:${{ secrets.EW_CHAT_GH_TOKEN }}@github.com/eveningwater/ew-chat.git
 
       - name: Build the project
-        run: pnpm run docs:build
+        run: pnpm run build
 
       - name: Deploy to GitHub Pages
         run: pnpm run release
