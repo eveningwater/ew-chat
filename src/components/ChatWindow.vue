@@ -6,14 +6,17 @@
                 {{ currentChat?.title || translations.newConversation }}
             </div>
             <div class="header-actions">
-                <button v-if="!isTyping" @click="$emit('regenerate-response')" title="重新生成回复">
+                <button v-if="!isTyping" @click="$emit('regenerate-response')" :title="translations.regenerateResponse">
                     <i class="fas fa-sync"></i>
                 </button>
-                <button v-if="isTyping" @click="$emit('stop-response')" title="停止生成">
+                <button v-if="isTyping" @click="$emit('stop-response')" :title="translations.stopResponse">
                     <i class="fas fa-stop"></i>
                 </button>
-                <button @click="$emit('export-chat')" title="导出对话">
+                <button @click="$emit('export-chat')" :title="translations.exportChat">
                     <i class="fas fa-download"></i>
+                </button>
+                <button @click="toGithub">
+                    <i class="fa-brands fa-github"></i>
                 </button>
             </div>
         </div>
@@ -120,6 +123,7 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import type { Chat } from '../types';
+import { openNewWindow } from '../utils';
 
 const props = defineProps<{
     currentChat: Chat | null;
@@ -243,6 +247,9 @@ function scrollToBottom() {
     }
 }
 
+function toGithub() {
+    openNewWindow('https://github.com/eveningwater/ew-chat');
+}
 // 监听消息变化，自动滚动到底部并触发打字效果
 watch(
     () => props.currentChat?.messages.length,

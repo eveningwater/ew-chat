@@ -51,8 +51,9 @@ import ChatWindow from './components/ChatWindow.vue';
 import Modal from './components/Modal.vue';
 
 // 导入类型和配置
-import type { Chat, Message, Language, Translations, AppState } from './types/index';
+import type { Chat, Message, Language, AppState } from './types/index';
 import { API_KEY, MODEL } from './config';
+import { translations } from './const';
 
 // 创建响应式存储
 const store = useStorage<Partial<AppState>>('ew-chat-storage', {
@@ -89,65 +90,6 @@ function handleModalConfirm() {
 const currentChat = computed<Chat | null>(() => {
     return currentChatId.value ? chats.value[currentChatId.value] : null;
 });
-
-// 翻译字典
-const translations: Translations = {
-    en: {
-        newChat: "New Chat",
-        clearHistory: "Clear History",
-        darkMode: "Dark Mode",
-        lightMode: "Light Mode",
-        welcomeTitle: "Welcome to ewChat AI",
-        welcomeMessage: "Ask me anything. I'm powered by deepseek-r1.",
-        suggestionTellStory: "Tell me a story",
-        suggestionQuantum: "Explain quantum computing",
-        suggestionPoem: "Write a poem",
-        suggestionJavaScript: "Help me learn JavaScript",
-        newConversation: "New Conversation",
-        waitMessage: "Please wait until the current response is completed.",
-        errorMessage: "Sorry, I encountered an error: ",
-        typePlaceholder: "Type your message here...",
-        disclaimer: "ewChat may produce inaccurate information. Messages are stored locally.",
-        chatHistory: "Chat History",
-        confirmClearAllHistory: "Are you sure you want to clear all history?",
-        uploadedFile: "Uploaded file: ",
-        deleteText: "Delete",
-        renameText: "Rename",
-        confirmDelete: "Are you sure you want to delete this chat?",
-        language: "English",
-        cancel: "Cancel",
-        confirm: "Sure",
-        newChatTitle: "New Chat Title",
-    },
-    zh: {
-        newChat: "新对话",
-        clearHistory: "清除历史",
-        darkMode: "深色模式",
-        lightMode: "浅色模式",
-        welcomeTitle: "欢迎使用 ewChat AI",
-        welcomeMessage: "有问题尽管问我。我由deepseek-r1提供支持。",
-        suggestionTellStory: "讲个故事",
-        suggestionQuantum: "解释量子计算",
-        suggestionPoem: "写一首诗",
-        suggestionJavaScript: "帮我学习JavaScript",
-        newConversation: "新对话",
-        waitMessage: "请等待当前回复完成。",
-        errorMessage: "抱歉，我遇到了一个错误：",
-        typePlaceholder: "在此输入您的消息...",
-        disclaimer: "ewChat 可能会产生不准确的信息，消息存储在本地。",
-        chatHistory: "聊天历史",
-        uploadedFile: "上传的文件：",
-        deleteText: "删除",
-        renameText: "重命名",
-        confirmDelete: "确定要删除这个聊天吗？",
-        confirmClearAllHistory: "确定要清除历史吗？",
-        newChatTitle: "新的聊天标题",
-        cancel: "取消",
-        confirm: "确认",
-        language: "中文",
-    },
-};
-
 
 // 创建新聊天
 function createNewChat() {
@@ -408,7 +350,7 @@ function clearAllHistory() {
         saveToStore();
         createNewChat();
         showModal.value = false;
-        ewMessage.success(translations[currentLanguage.value].clearHistory + '已完成');
+        ewMessage.success(translations[currentLanguage.value].clearSuccessAllHistory);
     };
 }
 
@@ -501,7 +443,7 @@ function deleteChat(chatId: string) {
     }
 
     saveToStore();
-    ewMessage.success('聊天已删除');
+    ewMessage.success(translations[currentLanguage.value].deleteSuccessText);
 }
 
 // 重命名聊天
@@ -509,7 +451,7 @@ function renameChat(chatId: string, newTitle: string) {
     if (chats.value[chatId]) {
         chats.value[chatId].title = newTitle;
         saveToStore();
-        ewMessage.success('聊天已重命名');
+        ewMessage.success(translations[currentLanguage.value].renameSuccessText);
     }
 }
 
