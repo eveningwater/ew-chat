@@ -28,7 +28,7 @@
             </template>
             <template #footer>
                 <button class="modal-button cancel" @click="showModal = false">{{ translations[currentLanguage].cancel
-                    }}</button>
+                }}</button>
                 <button class="modal-button confirm" @click="handleModalConfirm">{{
                     translations[currentLanguage].confirm }}</button>
             </template>
@@ -46,8 +46,8 @@ import { marked } from 'marked';
 import hljs from 'highlight.js';
 
 // 导入组件
-import Sidebar from './components/Sidebar.vue';
-import ChatWindow from './components/ChatWindow.vue';
+import Sidebar from './views/Sidebar.vue';
+import ChatWindow from './views/ChatWindow.vue';
 import Modal from './components/Modal.vue';
 
 // 导入类型和配置

@@ -55,7 +55,7 @@
         </template>
         <template #footer>
             <button class="modal-button cancel" @click="showDeleteModal = false">{{ translations.cancel || '取消'
-            }}</button>
+                }}</button>
             <button class="modal-button confirm" @click="confirmDeleteChat">{{ translations.confirm || '确认' }}</button>
         </template>
     </Modal>
@@ -74,7 +74,7 @@
         </template>
         <template #footer>
             <button class="modal-button cancel" @click="showRenameModal = false">{{ translations.cancel || '取消'
-            }}</button>
+                }}</button>
             <button class="modal-button confirm" @click="confirmRenameChat">{{ translations.confirm || '确认' }}</button>
         </template>
     </Modal>
@@ -82,7 +82,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import Modal from './Modal.vue';
+import Modal from '../components/Modal.vue';
 import type { Chat } from '../types/index';
 
 const props = defineProps<{
