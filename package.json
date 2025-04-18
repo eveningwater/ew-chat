@@ -12,7 +12,7 @@
   "dependencies": {
     "@types/marked": "^4.3.2",
     "@types/uuid": "^10.0.0",
-    "ew-message": "^0.1.8",
+    "ew-message": "0.1.8-beta.1",
     "ew-responsive-store": "^0.0.2",
     "gh-pages": "^6.3.0",
     "highlight.js": "^11.11.1",
