@@ -15,8 +15,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0
       ew-message:
-        specifier: 0.1.8-beta.1
-        version: 0.1.8-beta.1
+        specifier: 0.1.8-beta.3
+        version: 0.1.8-beta.3
       ew-responsive-store:
         specifier: ^0.0.2
         version: 0.0.2
@@ -562,8 +562,8 @@ packages:
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
-  ew-message@0.1.8-beta.1:
-    resolution: {integrity: sha512-k5qhiEbtLL+kABp6Axk9K6UgPywSl7IOvVo3H8sH1uV5ZXcC2Cx4etg/BLuUTmgqPZntcyxR2E9J1ML4pu8SZA==}
+  ew-message@0.1.8-beta.3:
+    resolution: {integrity: sha512-/K4DWJgbp3gLZtudwH5Fl6mYsaArv85ExPt1Bi6ZnhMp/ZVITOofazRHXKQKZQJD715cnnDf5x6g8/MsB61KVQ==}
 
   ew-responsive-store@0.0.2:
     resolution: {integrity: sha512-SEe2NPQfsBvjXTZ0d7incGselYFMQ1Sc/nNN4IzlymIrQor4u7XrrMgCLkcJsEijRzoRdbf/afuyiLSZtcMcdw==}
@@ -1250,7 +1250,7 @@ snapshots:
 
   estree-walker@2.0.2: {}
 
-  ew-message@0.1.8-beta.1: {}
+  ew-message@0.1.8-beta.3: {}
 
   ew-responsive-store@0.0.2:
     dependencies:
