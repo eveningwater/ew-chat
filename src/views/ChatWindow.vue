@@ -60,10 +60,11 @@
 
                             <!-- AI消息 -->
                             <div v-else>
-                                <!-- 正在打字的最后一条消息 -->
+                                <!-- 正在流式接收的消息 -->
                                 <template
-                                    v-if="isTypingText && message === currentChat.messages[currentChat.messages.length - 1] && message.role === 'assistant'">
-                                    <div v-html="renderMarkdown(displayedContent)"></div>
+                                    v-if="props.streamingMessageId && message.id === props.streamingMessageId && message.role === 'assistant'">
+                                    <div v-html="renderMarkdown(props.streamingContent)"></div>
+                                    <span class="streaming-cursor">|</span>
                                 </template>
                                 <!-- 已完成的消息 -->
                                 <template v-else>
@@ -76,7 +77,7 @@
             </template>
 
             <!-- 打字指示器 -->
-            <div v-if="isTyping" class="message ai">
+            <div v-if="isTyping && !props.streamingMessageId" class="message ai">
                 <div class="message-content">
                     <div class="typing-indicator">
                         <span></span>
@@ -95,7 +96,7 @@
                 </button>
                 <input type="file" ref="fileInput" style="display: none" @change="handleFileChange" />
                 <textarea ref="userInput" v-model="inputMessage" :placeholder="translations.typePlaceholder" rows="1"
-                    @input="autoResizeTextarea" @keydown.enter.prevent="handleEnterKey"></textarea>
+                    @input="handleTextareaInput" @keydown.enter.prevent="handleEnterKey"></textarea>
                 <button class="send-button" @click="sendMessage" title="发送消息">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -120,16 +121,18 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
 import type { Chat } from '../types';
 import { openNewWindow } from '../utils';
+import { renderMarkdown, configureMarked } from '../utils/markdown';
+import { scrollToBottom, autoResizeTextarea } from '../utils/dom';
 
 const props = defineProps<{
     currentChat: Chat | null;
     isTyping: boolean;
     translations: Record<string, string>;
     isDarkMode: boolean;
+    streamingMessageId: string | null;
+    streamingContent: string;
 }>();
 
 const emit = defineEmits<{
@@ -146,9 +149,6 @@ const pendingFile = ref<File | null>(null);
 const messagesContainer = ref<HTMLElement | null>(null);
 const userInput = ref<HTMLTextAreaElement | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
-const displayedContent = ref<string>('');
-const isTypingText = ref<boolean>(false);
-const typingSpeed = ref<number>(30); // 打字速度（毫秒/字符）
 
 // 建议消息
 const suggestions = computed(() => [
@@ -157,37 +157,6 @@ const suggestions = computed(() => [
     props.translations.suggestionPoem,
     props.translations.suggestionJavaScript
 ]);
-
-// 模拟打字效果
-function typeWriter(text: string, callback?: () => void) {
-    isTypingText.value = true;
-    displayedContent.value = '';
-    let i = 0;
-
-    function type() {
-        if (i < text.length) {
-            displayedContent.value += text.charAt(i);
-            i++;
-            nextTick(() => {
-                scrollToBottom();
-            });
-            setTimeout(type, typingSpeed.value);
-        } else {
-            isTypingText.value = false;
-            if (callback) callback();
-        }
-    }
-
-    type();
-}
-
-// 自动调整文本框高度
-function autoResizeTextarea() {
-    if (!userInput.value) return;
-
-    userInput.value.style.height = 'auto';
-    userInput.value.style.height = `${userInput.value.scrollHeight}px`;
-}
 
 // 处理Enter键
 function handleEnterKey(e: KeyboardEvent) {
@@ -217,6 +186,11 @@ function handleSuggestion(suggestion: string) {
     sendMessage();
 }
 
+// 处理文本框输入
+function handleTextareaInput() {
+    autoResizeTextarea(userInput.value);
+}
+
 // 触发文件上传
 function triggerFileUpload() {
     if (fileInput.value) {
@@ -240,30 +214,25 @@ function clearPendingFile() {
     }
 }
 
-// 滚动到底部
-function scrollToBottom() {
-    if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-    }
-}
-
 function toGithub() {
     openNewWindow('https://github.com/eveningwater/ew-chat');
 }
-// 监听消息变化，自动滚动到底部并触发打字效果
+// 监听消息变化，自动滚动到底部
 watch(
     () => props.currentChat?.messages.length,
-    (newLength, oldLength) => {
+    () => {
         nextTick(() => {
-            scrollToBottom();
+            scrollToBottom(messagesContainer.value);
+        });
+    }
+);
 
-            // 如果是新增的AI消息，触发打字效果
-            if (newLength && oldLength && newLength > oldLength && props.currentChat) {
-                const lastMessage = props.currentChat.messages[props.currentChat.messages.length - 1];
-                if (lastMessage.role === 'assistant') {
-                    typeWriter(lastMessage.content);
-                }
-            }
+// 监听流式内容变化，自动滚动到底部
+watch(
+    () => props.streamingContent,
+    () => {
+        nextTick(() => {
+            scrollToBottom(messagesContainer.value);
         });
     }
 );
@@ -273,68 +242,18 @@ watch(
     () => props.isTyping,
     () => {
         nextTick(() => {
-            scrollToBottom();
+            scrollToBottom(messagesContainer.value);
         });
     }
 );
 
-// 渲染Markdown
-function renderMarkdown(content: string): string {
-    try {
-        const html = marked.parse(content, {
-            gfm: true,           // 启用GitHub风格Markdown
-            breaks: true,       // 将换行符转换为<br>
-            smartLists: true,   // 使用更智能的列表行为
-            smartypants: true,  // 使用更智能的标点符号
-            highlight: function (code: string, lang: string) {
-                if (lang && hljs.getLanguage(lang)) {
-                    return hljs.highlight(code, { language: lang }).value;
-                }
-                return hljs.highlightAuto(code).value;
-            }
-        });
-
-        // 为代码块添加复制按钮
-        return html.replace(
-            /<pre><code class="language-([\w-]+)">(([\s\S])*?)<\/code><\/pre>/g,
-            (_match: unknown, language: string, code: string) => {
-                return `
-          <div class="code-block">
-            <div class="code-header">
-              <span class="code-language">${language}</span>
-              <button class="code-copy-button" onclick="(function(btn){navigator.clipboard.writeText(btn.parentNode.nextElementSibling.textContent);const icon=btn.querySelector('i');icon.className='fas fa-check';setTimeout(()=>icon.className='fas fa-copy',2000)})(this)">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-            <pre><code class="language-${language}">${code}</code></pre>
-          </div>
-        `;
-            }
-        );
-    } catch (error) {
-        console.error('Markdown parsing error:', error);
-        return content;
-    }
-}
-
 // 组件挂载后初始化
 onMounted(() => {
     // 配置marked和highlight.js
-    marked.setOptions({
-        highlight: function (code, lang) {
-            if (lang && hljs.getLanguage(lang)) {
-                return hljs.highlight(code, { language: lang }).value;
-            }
-            return hljs.highlightAuto(code).value;
-        },
-        breaks: true,
-        gfm: true,
-        smartLists: true,
-        smartypants: true
-    });
+    configureMarked();
 
     // 初始滚动到底部
-    scrollToBottom();
+    scrollToBottom(messagesContainer.value);
 });
 </script>
 
@@ -562,6 +481,21 @@ onMounted(() => {
 
 .message-content :deep(.code-copy-button:hover) {
     color: white;
+}
+
+.streaming-cursor {
+    animation: blink 1s infinite;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
+    }
 }
 
 .typing-indicator {

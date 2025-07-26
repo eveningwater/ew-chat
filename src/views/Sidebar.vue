@@ -54,9 +54,9 @@
             <p>{{ translations.confirmDelete || '确定要删除这个聊天吗？' }}</p>
         </template>
         <template #footer>
-            <button class="modal-button cancel" @click="showDeleteModal = false">{{ translations.cancel || '取消'
-                }}</button>
-            <button class="modal-button confirm" @click="confirmDeleteChat">{{ translations.confirm || '确认' }}</button>
+            <ModalButton variant="cancel" @click="showDeleteModal = false">{{ translations.cancel || '取消'
+                }}</ModalButton>
+            <ModalButton variant="confirm" @click="confirmDeleteChat">{{ translations.confirm || '确认' }}</ModalButton>
         </template>
     </Modal>
 
@@ -73,9 +73,9 @@
             </div>
         </template>
         <template #footer>
-            <button class="modal-button cancel" @click="showRenameModal = false">{{ translations.cancel || '取消'
-                }}</button>
-            <button class="modal-button confirm" @click="confirmRenameChat">{{ translations.confirm || '确认' }}</button>
+            <ModalButton variant="cancel" @click="showRenameModal = false">{{ translations.cancel || '取消'
+                }}</ModalButton>
+            <ModalButton variant="confirm" @click="confirmRenameChat">{{ translations.confirm || '确认' }}</ModalButton>
         </template>
     </Modal>
 </template>
@@ -83,6 +83,7 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 import Modal from '../components/Modal.vue';
+import ModalButton from '../components/ModalButton.vue';
 import type { Chat } from '../types/index';
 
 const props = defineProps<{
@@ -332,35 +333,6 @@ function confirmRenameChat() {
 .rename-input:focus {
     outline: none;
     border-color: var(--primary-color);
-}
-
-/* 模态框按钮样式 */
-.modal-button {
-    padding: 8px 16px;
-    border-radius: var(--border-radius);
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-left: 10px;
-}
-
-.modal-button.cancel {
-    background-color: var(--background-secondary);
-    color: var(--text-primary);
-}
-
-.modal-button.confirm {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.modal-button.cancel:hover {
-    background-color: var(--background-tertiary);
-}
-
-.modal-button.confirm:hover {
-    background-color: var(--secondary-color);
 }
 
 @media (max-width: 768px) {

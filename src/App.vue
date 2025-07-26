@@ -14,7 +14,8 @@
 
             <!-- 聊天窗口组件 -->
             <ChatWindow :currentChat="currentChat" :isTyping="isTyping" :translations="translations[currentLanguage]"
-                :isDarkMode="isDarkMode" @send-message="sendMessage" @regenerate-response="regenerateLastResponse"
+                :isDarkMode="isDarkMode" :streamingMessageId="streamingMessageId" :streamingContent="streamingContent"
+                @send-message="sendMessage" @regenerate-response="regenerateLastResponse"
                 @stop-response="stopResponse" @export-chat="exportCurrentChat" @upload-file="handleFileUpload" />
         </div>
 
@@ -27,10 +28,10 @@
                 <div>{{ modalContent }}</div>
             </template>
             <template #footer>
-                <button class="modal-button cancel" @click="showModal = false">{{ translations[currentLanguage].cancel
-                }}</button>
-                <button class="modal-button confirm" @click="handleModalConfirm">{{
-                    translations[currentLanguage].confirm }}</button>
+                <ModalButton variant="cancel" @click="showModal = false">{{ translations[currentLanguage].cancel
+                }}</ModalButton>
+                <ModalButton variant="confirm" @click="handleModalConfirm">{{
+                    translations[currentLanguage].confirm }}</ModalButton>
             </template>
         </Modal>
     </div>
@@ -42,13 +43,13 @@ import { useStorage } from 'ew-responsive-store';
 import ewMessage from 'ew-message';
 import 'ew-message/dist/ew-message.min.css';
 import { v4 as uuidv4 } from 'uuid';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
+import { configureMarked } from './utils/markdown';
 
 // 导入组件
 import Sidebar from './views/Sidebar.vue';
 import ChatWindow from './views/ChatWindow.vue';
 import Modal from './components/Modal.vue';
+import ModalButton from './components/ModalButton.vue';
 
 // 导入类型和配置
 import type { Chat, Message, Language, AppState } from './types/index';
@@ -72,6 +73,8 @@ const isTyping = ref<boolean>(false);
 const isSidebarActive = ref<boolean>(false);
 const stopGeneration = ref<boolean>(false);
 const pendingFile = ref<File | null>(null);
+const streamingMessageId = ref<string | null>(null); // 新增：跟踪正在流式接收的消息ID
+const streamingContent = ref<string>(''); // 新增：当前流式接收的内容
 
 // 模态框状态
 const showModal = ref<boolean>(false);
@@ -163,24 +166,29 @@ async function sendMessage(content: string, file?: File) {
         isTyping.value = true;
         stopGeneration.value = false;
 
-        // 获取AI响应
-        const response = await getAIResponse(chatId);
-
-        // 保存AI响应
+        // 先创建一个空的AI消息用于流式更新
+        const assistantMessageId = uuidv4();
         const assistantMessage: Message = {
-            id: uuidv4(),
+            id: assistantMessageId,
             role: 'assistant',
-            content: response,
+            content: '',
             timestamp: Date.now(),
         };
 
         chats.value[chatId].messages.push(assistantMessage);
+        streamingMessageId.value = assistantMessageId;
+        streamingContent.value = '';
         saveToStore();
+
+        // 获取AI响应（流式）
+        await getAIResponse(chatId, assistantMessageId);
 
     } catch (error: any) {
         ewMessage.error(`${translations[currentLanguage.value].errorMessage}${error.message}`);
     } finally {
         isTyping.value = false;
+        streamingMessageId.value = null;
+        streamingContent.value = '';
     }
 }
 
@@ -218,7 +226,7 @@ async function processFile(file: File, chatId: string): Promise<void> {
 }
 
 // 获取AI响应
-async function getAIResponse(chatId: string): Promise<string> {
+async function getAIResponse(chatId: string, assistantMessageId: string): Promise<void> {
     try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -244,7 +252,6 @@ async function getAIResponse(chatId: string): Promise<string> {
         const reader = response.body!.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        let accumulatedText = '';
 
         while (true) {
             const { done, value } = await reader.read();
@@ -267,8 +274,17 @@ async function getAIResponse(chatId: string): Promise<string> {
                             const delta = obj.choices[0].delta;
                             const text = (delta.content || '') + (delta.reasoning || '');
                             if (text) {
-                                accumulatedText += text;
-                                // 这里可以添加事件发射，通知UI更新
+                                // 实时更新流式内容
+                                streamingContent.value += text;
+                                
+                                // 更新消息内容
+                                const messageIndex = chats.value[chatId].messages.findIndex(
+                                    msg => msg.id === assistantMessageId
+                                );
+                                if (messageIndex !== -1) {
+                                    chats.value[chatId].messages[messageIndex].content = streamingContent.value;
+                                    saveToStore();
+                                }
                             }
                         }
                     } catch (e) {
@@ -277,8 +293,6 @@ async function getAIResponse(chatId: string): Promise<string> {
                 }
             }
         }
-
-        return accumulatedText;
     } catch (error) {
         console.error('API Error:', error);
         throw error;
@@ -308,24 +322,29 @@ async function regenerateLastResponse() {
         isTyping.value = true;
         stopGeneration.value = false;
 
-        // 获取新的AI响应
-        const response = await getAIResponse(chatId);
-
-        // 保存新的AI响应
+        // 先创建一个空的AI消息用于流式更新
+        const assistantMessageId = uuidv4();
         const assistantMessage: Message = {
-            id: uuidv4(),
+            id: assistantMessageId,
             role: 'assistant',
-            content: response,
+            content: '',
             timestamp: Date.now(),
         };
 
         chats.value[chatId].messages.push(assistantMessage);
+        streamingMessageId.value = assistantMessageId;
+        streamingContent.value = '';
         saveToStore();
+
+        // 获取新的AI响应（流式）
+        await getAIResponse(chatId, assistantMessageId);
 
     } catch (error: any) {
         ewMessage.error(`${translations[currentLanguage.value].errorMessage}${error.message}`);
     } finally {
         isTyping.value = false;
+        streamingMessageId.value = null;
+        streamingContent.value = '';
     }
 }
 
@@ -474,15 +493,7 @@ function saveToStore() {
 
 // 初始化
 onMounted(() => {
-    marked.setOptions({
-        highlight: function (code: string, lang: string) {
-            if (lang && hljs.getLanguage(lang)) {
-                return hljs.highlight(code, { language: lang }).value;
-            }
-            return hljs.highlightAuto(code).value;
-        },
-        breaks: true
-    });
+    configureMarked();
 
     // 应用主题
     document.body.classList.toggle('dark-mode', isDarkMode.value);

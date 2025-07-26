@@ -12,7 +12,7 @@
             </div>
             <div class="modal-footer">
                 <slot name="footer">
-                    <button class="modal-button" @click="$emit('close')">关闭</button>
+                    <ModalButton @click="$emit('close')">关闭</ModalButton>
                 </slot>
             </div>
         </div>
@@ -20,6 +20,8 @@
 </template>
 
 <script lang="ts" setup>
+import ModalButton from './ModalButton.vue';
+
 defineEmits<{
     'close': [];
 }>();
@@ -83,34 +85,6 @@ defineEmits<{
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
-}
-
-.modal-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.modal-button.cancel {
-    background-color: var(--background-secondary);
-    color: var(--text-primary);
-}
-
-.modal-button.cancel:hover {
-    background-color: var(--background-tertiary);
-    color: var(--text-secondary);
-}
-
-.modal-button+.modal-button {
-    margin-left: 10px;
-}
-
-.modal-button:hover {
-    background-color: var(--secondary-color);
 }
 
 @keyframes fadeIn {
