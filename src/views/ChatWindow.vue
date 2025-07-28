@@ -63,8 +63,7 @@
                                 <!-- 正在流式接收的消息 -->
                                 <template
                                     v-if="props.streamingMessageId && message.id === props.streamingMessageId && message.role === 'assistant'">
-                                    <div v-html="renderMarkdown(props.streamingContent)"></div>
-                                    <span class="streaming-cursor">|</span>
+                                    <div v-html="getStableRendering(props.streamingContent)"></div>
                                 </template>
                                 <!-- 已完成的消息 -->
                                 <template v-else>
@@ -123,7 +122,7 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import type { Chat } from '../types';
 import { openNewWindow } from '../utils';
-import { renderMarkdown, configureMarked } from '../utils/markdown';
+import { renderMarkdown, configureMarked, getStableRendering } from '../utils/markdown';
 import { scrollToBottom, autoResizeTextarea } from '../utils/dom';
 
 const props = defineProps<{
@@ -481,21 +480,6 @@ onMounted(() => {
 
 .message-content :deep(.code-copy-button:hover) {
     color: white;
-}
-
-.streaming-cursor {
-    animation: blink 1s infinite;
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-@keyframes blink {
-    0%, 50% {
-        opacity: 1;
-    }
-    51%, 100% {
-        opacity: 0;
-    }
 }
 
 .typing-indicator {

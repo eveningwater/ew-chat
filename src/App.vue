@@ -166,19 +166,10 @@ async function sendMessage(content: string, file?: File) {
         isTyping.value = true;
         stopGeneration.value = false;
 
-        // 先创建一个空的AI消息用于流式更新
+        // 创建assistant消息ID，但不立即添加到消息列表
         const assistantMessageId = uuidv4();
-        const assistantMessage: Message = {
-            id: assistantMessageId,
-            role: 'assistant',
-            content: '',
-            timestamp: Date.now(),
-        };
-
-        chats.value[chatId].messages.push(assistantMessage);
         streamingMessageId.value = assistantMessageId;
         streamingContent.value = '';
-        saveToStore();
 
         // 获取AI响应（流式）
         await getAIResponse(chatId, assistantMessageId);
@@ -228,6 +219,18 @@ async function processFile(file: File, chatId: string): Promise<void> {
 // 获取AI响应
 async function getAIResponse(chatId: string, assistantMessageId: string): Promise<void> {
     try {
+        // 创建空的assistant消息用于流式更新
+        const assistantMessage: Message = {
+            id: assistantMessageId,
+            role: 'assistant',
+            content: '',
+            timestamp: Date.now(),
+        };
+
+        // 添加到消息列表
+        chats.value[chatId].messages.push(assistantMessage);
+        saveToStore();
+
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -236,7 +239,7 @@ async function getAIResponse(chatId: string, assistantMessageId: string): Promis
             },
             body: JSON.stringify({
                 model: MODEL,
-                messages: chats.value[chatId].messages.map(msg => ({
+                messages: chats.value[chatId].messages.slice(0, -1).map(msg => ({
                     role: msg.role,
                     content: msg.content
                 })),
@@ -252,6 +255,34 @@ async function getAIResponse(chatId: string, assistantMessageId: string): Promis
         const reader = response.body!.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
+        let typingBuffer = '';
+        let accumulatedText = '';
+        let isProcessingBuffer = false;
+        const typingSpeed = 2; // 打字速度（毫秒/字符）
+
+        // 处理打字缓冲区的函数
+        function processBuffer() {
+            if (typingBuffer.length > 0 && !stopGeneration.value) {
+                accumulatedText += typingBuffer[0];
+                typingBuffer = typingBuffer.slice(1);
+                
+                // 更新流式内容
+                streamingContent.value = accumulatedText;
+                
+                // 更新消息内容
+                const messageIndex = chats.value[chatId].messages.findIndex(
+                    msg => msg.id === assistantMessageId
+                );
+                if (messageIndex !== -1) {
+                    chats.value[chatId].messages[messageIndex].content = accumulatedText;
+                    saveToStore();
+                }
+                
+                setTimeout(processBuffer, typingSpeed);
+            } else {
+                isProcessingBuffer = false;
+            }
+        }
 
         while (true) {
             const { done, value } = await reader.read();
@@ -274,16 +305,10 @@ async function getAIResponse(chatId: string, assistantMessageId: string): Promis
                             const delta = obj.choices[0].delta;
                             const text = (delta.content || '') + (delta.reasoning || '');
                             if (text) {
-                                // 实时更新流式内容
-                                streamingContent.value += text;
-                                
-                                // 更新消息内容
-                                const messageIndex = chats.value[chatId].messages.findIndex(
-                                    msg => msg.id === assistantMessageId
-                                );
-                                if (messageIndex !== -1) {
-                                    chats.value[chatId].messages[messageIndex].content = streamingContent.value;
-                                    saveToStore();
+                                typingBuffer += text;
+                                if (!isProcessingBuffer) {
+                                    isProcessingBuffer = true;
+                                    processBuffer();
                                 }
                             }
                         }
@@ -292,6 +317,11 @@ async function getAIResponse(chatId: string, assistantMessageId: string): Promis
                     }
                 }
             }
+        }
+
+        // 等待打字缓冲区完全处理完毕
+        while (isProcessingBuffer) {
+            await new Promise((resolve) => setTimeout(resolve, typingSpeed));
         }
     } catch (error) {
         console.error('API Error:', error);
@@ -322,19 +352,10 @@ async function regenerateLastResponse() {
         isTyping.value = true;
         stopGeneration.value = false;
 
-        // 先创建一个空的AI消息用于流式更新
+        // 创建assistant消息ID，但不立即添加到消息列表
         const assistantMessageId = uuidv4();
-        const assistantMessage: Message = {
-            id: assistantMessageId,
-            role: 'assistant',
-            content: '',
-            timestamp: Date.now(),
-        };
-
-        chats.value[chatId].messages.push(assistantMessage);
         streamingMessageId.value = assistantMessageId;
         streamingContent.value = '';
-        saveToStore();
 
         // 获取新的AI响应（流式）
         await getAIResponse(chatId, assistantMessageId);

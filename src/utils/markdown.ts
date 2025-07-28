@@ -17,6 +17,23 @@ export function configureMarked() {
     });
 }
 
+// 获取稳定的渲染结果（处理未完成的代码块）
+export function getStableRendering(text: string): string {
+    // 按三个反引号分割文本
+    let parts = text.split("```");
+    if (parts.length % 2 === 1) {
+        // 所有代码块都已关闭
+        return marked.parse(text);
+    } else {
+        // 代码块未关闭；通过人为关闭它来强制渲染为代码块
+        let closedPart = parts.slice(0, parts.length - 1).join("```");
+        let openPart = parts[parts.length - 1];
+        return (
+            marked.parse(closedPart) + marked.parse("```" + openPart + "\n```")
+        );
+    }
+}
+
 // 渲染Markdown内容
 export function renderMarkdown(content: string): string {
     try {
