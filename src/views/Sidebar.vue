@@ -91,6 +91,7 @@ const props = defineProps<{
     chats: Record<string, Chat>;
     currentChatId: string | null;
     translations: Record<string, string>;
+    isDarkMode: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -106,11 +107,6 @@ const emit = defineEmits<{
 // 计算属性：按时间戳排序的聊天列表
 const sortedChats = computed(() => {
     return Object.values(props.chats).sort((a, b) => b.timestamp - a.timestamp);
-});
-
-// 计算属性：是否为深色模式
-const isDarkMode = computed(() => {
-    return document.body.classList.contains('dark-mode');
 });
 
 // 删除聊天相关状态

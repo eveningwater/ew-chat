@@ -8,7 +8,7 @@
 
             <!-- 侧边栏组件 -->
             <Sidebar :isActive="isSidebarActive" :chats="chats" :currentChatId="currentChatId"
-                :translations="translations[currentLanguage]" @new-chat="createNewChat" @load-chat="loadChat"
+                :translations="translations[currentLanguage]" :isDarkMode="isDarkMode" @new-chat="createNewChat" @load-chat="loadChat"
                 @clear-history="clearAllHistory" @toggle-theme="toggleTheme" @toggle-language="toggleLanguage"
                 @delete-chat="deleteChat" @rename-chat="renameChat" />
 
