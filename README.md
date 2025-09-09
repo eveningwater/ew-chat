@@ -8,6 +8,10 @@
 // src/config.ts
 // 你自己申请的api_key
 export const API_KEY = "xxxx";
+// 修改模型
+export const MODEL = "deepseek/deepseek-r1:free";
+// api地址
+export const BASE_API = 'https://openrouter.ai/api/v1/chat/completions';
 ```
 
 然后就可以在本地使用了。

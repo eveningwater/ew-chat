@@ -53,7 +53,7 @@ import ModalButton from './components/ModalButton.vue';
 
 // 导入类型和配置
 import type { Chat, Message, Language, AppState } from './types/index';
-import { API_KEY, MODEL } from './config';
+import { API_KEY, BASE_API, MODEL } from './config';
 import { translations } from './const';
 
 // 创建响应式存储
@@ -231,7 +231,7 @@ async function getAIResponse(chatId: string, assistantMessageId: string): Promis
         chats.value[chatId].messages.push(assistantMessage);
         saveToStore();
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch(BASE_API, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${API_KEY}`,
